@@ -751,7 +751,7 @@ async function queryVirusTotal(ioc, type, logEl) {
   };
   try {
     const res = await fetch(
-      `https://www.virustotal.com/api/v3/${endpoints[type]}`,
+      `https://corsproxy.io/?https://www.virustotal.com/api/v3/${endpoints[type]}`,
       { headers: { 'x-apikey': keys.virustotal } }
     );
     const d = await res.json();
