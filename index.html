@@ -724,7 +724,7 @@ async function queryAbuseIPDB(ip, logEl) {
   addLog(logEl, 'AbuseIPDB: querying...', 'info');
   try {
     const res = await fetch(
-      `https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ip)}&maxAgeInDays=90&verbose`,
+      `https://corsproxy.io/?https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ip)}&maxAgeInDays=90&verbose`,
       { headers: { 'Key': keys.abuseipdb, 'Accept': 'application/json' } }
     );
     const d = await res.json();
@@ -790,7 +790,7 @@ async function queryShodan(ip, logEl) {
   if (!keys.shodan) { addLog(logEl, 'Shodan: skipped (no key)', ''); return null; }
   addLog(logEl, 'Shodan: querying host info...', 'info');
   try {
-    const res = await fetch(`https://api.shodan.io/shodan/host/${ip}?key=${keys.shodan}`);
+    const res = await fetch(`https://corsproxy.io/?https://api.shodan.io/shodan/host/${ip}?key=${keys.shodan}`);
     const d = await res.json();
     if (d.ip_str) {
       addLog(logEl, `Shodan: ${(d.ports||[]).length} open ports, ${Object.keys(d.vulns||{}).length} CVEs`, 'ok');
