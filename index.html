@@ -790,7 +790,7 @@ async function queryShodan(ip, logEl) {
   if (!keys.shodan) { addLog(logEl, 'Shodan: skipped (no key)', ''); return null; }
   addLog(logEl, 'Shodan: querying host info...', 'info');
   try {
-    const res = await fetch(`https://corsproxy.io/?https://api.shodan.io/shodan/host/${ip}?key=${keys.shodan}`);
+    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.shodan.io/shodan/host/' + ip + '?key=' + keys.shodan)}`);
     const d = await res.json();
     if (d.ip_str) {
       addLog(logEl, `Shodan: ${(d.ports||[]).length} open ports, ${Object.keys(d.vulns||{}).length} CVEs`, 'ok');
