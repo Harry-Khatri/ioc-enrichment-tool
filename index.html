@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Unified IOC Enrichment Tool — SOC Toolkit</title>
   <style>
-    /* ─── Reset & Base ────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --bg:        #0d0f14;
       --bg2:       #13161e;
@@ -33,453 +31,116 @@
       --radius:    8px;
       --radius-lg: 12px;
     }
-
     html { font-size: 15px; }
-    body {
-      font-family: var(--sans);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.6;
-    }
-
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
     a { color: var(--blue); text-decoration: none; }
     a:hover { text-decoration: underline; }
-
-    /* ─── Layout ──────────────────────────────────────── */
-    .app {
-      max-width: 960px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 4rem;
-    }
-
-    /* ─── Header ──────────────────────────────────────── */
-    .header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 2.5rem;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-    .header-left h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #fff;
-    }
+    .app { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2.5rem; gap: 1rem; flex-wrap: wrap; }
+    .header-left h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
     .header-left h1 span { color: var(--blue); }
-    .header-left p {
-      font-size: 0.85rem;
-      color: var(--text2);
-      margin-top: 4px;
-    }
+    .header-left p { font-size: 0.85rem; color: var(--text2); margin-top: 4px; }
     .header-badges { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
-    .badge {
-      font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      padding: 3px 8px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
+    .badge { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
     .badge-green  { background: var(--green-bg);  color: var(--green);  border: 1px solid #1a4a30; }
     .badge-blue   { background: var(--blue-bg);   color: var(--blue);   border: 1px solid #1a3655; }
     .badge-purple { background: var(--purple-bg); color: var(--purple); border: 1px solid #2e2450; }
     .version { font-size: 0.72rem; color: var(--text3); font-family: var(--mono); padding: 4px 0; }
-
-    /* ─── Section labels ──────────────────────────────── */
-    .section-label {
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 10px;
-    }
-
-    /* ─── API Key Panel ───────────────────────────────── */
+    .section-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; }
     .config-section { margin-bottom: 2rem; }
-    .config-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      user-select: none;
-      padding: 10px 14px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 0.82rem;
-      color: var(--text2);
-      transition: background 0.15s, border-color 0.15s;
-    }
+    .config-toggle { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; padding: 10px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.82rem; color: var(--text2); transition: background 0.15s, border-color 0.15s; }
     .config-toggle:hover { background: var(--bg3); border-color: var(--border2); }
     .config-toggle .arrow { font-size: 0.65rem; transition: transform 0.2s; }
     .config-toggle .arrow.open { transform: rotate(90deg); }
     .config-toggle .dot-row { display: flex; gap: 4px; margin-left: auto; }
-    .config-toggle .led {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--border2);
-      transition: background 0.2s;
-    }
+    .config-toggle .led { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: background 0.2s; }
     .config-toggle .led.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
-
-    .config-panel {
-      display: none;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 var(--radius) var(--radius);
-      padding: 1.25rem;
-    }
+    .config-panel { display: none; background: var(--bg2); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 1.25rem; }
     .config-panel.open { display: block; }
-
-    .api-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-    }
-    .api-card {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-    }
-    .api-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    .api-card-name {
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text2);
-    }
-    .api-status {
-      font-size: 0.65rem;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: 600;
-    }
-    .api-status.set  { background: var(--green-bg);  color: var(--green); }
-    .api-status.none { background: var(--bg4);        color: var(--text3); }
-    .api-types {
-      font-size: 0.65rem;
-      color: var(--text3);
-      margin-bottom: 8px;
-      font-family: var(--mono);
-    }
-    .api-key-input {
-      width: 100%;
-      font-family: var(--mono);
-      font-size: 0.72rem;
-      padding: 7px 10px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.15s;
-    }
+    .api-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .api-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+    .api-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .api-card-name { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text2); }
+    .api-status { font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+    .api-status.set  { background: var(--green-bg); color: var(--green); }
+    .api-status.none { background: var(--bg4); color: var(--text3); }
+    .api-types { font-size: 0.65rem; color: var(--text3); margin-bottom: 8px; font-family: var(--mono); }
+    .api-key-input { width: 100%; font-family: var(--mono); font-size: 0.72rem; padding: 7px 10px; background: var(--bg); border: 1px solid var(--border); border-radius: 5px; color: var(--text); outline: none; transition: border-color 0.15s; }
     .api-key-input:focus { border-color: var(--blue); }
     .api-key-input::placeholder { color: var(--text3); }
-    .api-link {
-      display: inline-block;
-      font-size: 0.65rem;
-      color: var(--text3);
-      margin-top: 5px;
-      text-decoration: underline;
-    }
+    .api-link { display: inline-block; font-size: 0.65rem; color: var(--text3); margin-top: 5px; text-decoration: underline; }
     .api-link:hover { color: var(--blue); }
-
-    .config-note {
-      margin-top: 12px;
-      font-size: 0.75rem;
-      color: var(--text3);
-      background: var(--bg4);
-      border-radius: 5px;
-      padding: 8px 12px;
-      line-height: 1.5;
-    }
+    .config-note { margin-top: 12px; font-size: 0.75rem; color: var(--text3); background: var(--bg4); border-radius: 5px; padding: 8px 12px; line-height: 1.5; }
     .config-note b { color: var(--text2); }
-
-    /* ─── Input Area ──────────────────────────────────── */
     .input-section { margin-bottom: 2rem; }
-    .input-row {
-      display: flex;
-      gap: 8px;
-    }
-    .ioc-input {
-      flex: 1;
-      font-family: var(--mono);
-      font-size: 0.9rem;
-      padding: 12px 16px;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.15s;
-    }
+    .input-row { display: flex; gap: 8px; }
+    .ioc-input { flex: 1; font-family: var(--mono); font-size: 0.9rem; padding: 12px 16px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); outline: none; transition: border-color 0.15s; }
     .ioc-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(77,157,224,0.12); }
     .ioc-input::placeholder { color: var(--text3); }
-
-    .scan-btn {
-      padding: 12px 22px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      font-family: var(--sans);
-      letter-spacing: 0.03em;
-      background: var(--blue);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s, transform 0.1s;
-    }
+    .scan-btn { padding: 12px 22px; font-size: 0.85rem; font-weight: 600; font-family: var(--sans); letter-spacing: 0.03em; background: var(--blue); color: #fff; border: none; border-radius: var(--radius); cursor: pointer; white-space: nowrap; transition: background 0.15s, transform 0.1s; }
     .scan-btn:hover  { background: #3a8fd4; }
     .scan-btn:active { transform: scale(0.97); }
     .scan-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
-    .examples {
-      margin-top: 8px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .example-chip {
-      font-size: 0.7rem;
-      font-family: var(--mono);
-      padding: 3px 9px;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text2);
-      cursor: pointer;
-      transition: background 0.12s, border-color 0.12s;
-    }
+    .examples { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .example-chip { font-size: 0.7rem; font-family: var(--mono); padding: 3px 9px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; color: var(--text2); cursor: pointer; transition: background 0.12s, border-color 0.12s; }
     .example-chip:hover { background: var(--bg4); border-color: var(--blue); color: var(--blue); }
-
-    /* ─── Detection log ───────────────────────────────── */
-    .scan-log {
-      font-family: var(--mono);
-      font-size: 0.75rem;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px 14px;
-      max-height: 130px;
-      overflow-y: auto;
-      line-height: 2;
-      margin-bottom: 1.5rem;
-    }
+    .scan-log { font-family: var(--mono); font-size: 0.75rem; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; max-height: 130px; overflow-y: auto; line-height: 2; margin-bottom: 1.5rem; }
     .scan-log .ok   { color: var(--green); }
     .scan-log .err  { color: var(--red); }
     .scan-log .info { color: var(--blue); }
     .scan-log .warn { color: var(--yellow); }
-
-    /* ─── Type badge ──────────────────────────────────── */
-    .type-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-family: var(--mono);
-      font-size: 0.8rem;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 5px;
-      margin-bottom: 1.25rem;
-    }
+    .type-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.8rem; font-weight: 600; padding: 5px 12px; border-radius: 5px; margin-bottom: 1.25rem; }
     .type-ip     { background: var(--blue-bg);   color: var(--blue);   border: 1px solid #1a3655; }
     .type-domain { background: var(--purple-bg); color: var(--purple); border: 1px solid #2e2450; }
     .type-hash   { background: var(--yellow-bg); color: var(--yellow); border: 1px solid #3d2e10; }
     .type-url    { background: var(--green-bg);  color: var(--green);  border: 1px solid #1a4a30; }
-
-    /* ─── Score panel ─────────────────────────────────── */
-    .score-panel {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .score-num {
-      font-family: var(--mono);
-      font-size: 3.5rem;
-      font-weight: 700;
-      line-height: 1;
-      min-width: 90px;
-    }
+    .score-panel { display: flex; align-items: center; gap: 1.5rem; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .score-num { font-family: var(--mono); font-size: 3.5rem; font-weight: 700; line-height: 1; min-width: 90px; }
     .score-num.low    { color: var(--green); }
     .score-num.medium { color: var(--yellow); }
     .score-num.high   { color: var(--red); }
     .score-info { flex: 1; }
-    .score-verdict {
-      font-size: 1rem;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-    .score-sub {
-      font-size: 0.8rem;
-      color: var(--text2);
-      line-height: 1.5;
-      margin-bottom: 10px;
-    }
-    .score-bar-track {
-      height: 5px;
-      background: var(--bg4);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .score-bar-fill {
-      height: 100%;
-      border-radius: 3px;
-      width: 0;
-      transition: width 0.8s cubic-bezier(0.34,1.2,0.64,1);
-    }
-    .score-label {
-      font-size: 0.7rem;
-      color: var(--text3);
-      margin-top: 5px;
-      font-family: var(--mono);
-    }
-
-    /* ─── Results grid ────────────────────────────────── */
-    .results-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 1.5rem;
-    }
+    .score-verdict { font-size: 1rem; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .score-sub { font-size: 0.8rem; color: var(--text2); line-height: 1.5; margin-bottom: 10px; }
+    .score-bar-track { height: 5px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+    .score-bar-fill { height: 100%; border-radius: 3px; width: 0; transition: width 0.8s cubic-bezier(0.34,1.2,0.64,1); }
+    .score-label { font-size: 0.7rem; color: var(--text3); margin-top: 5px; font-family: var(--mono); }
+    .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
     @media (max-width: 620px) { .results-grid { grid-template-columns: 1fr; } }
-    .result-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1rem 1.15rem;
-    }
-    .result-card.full  { grid-column: 1 / -1; }
-    .result-card.skip  { opacity: 0.45; }
-    .result-source {
-      font-size: 0.68rem;
-      font-weight: 700;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      color: var(--text3);
-      margin-bottom: 8px;
-    }
-    .result-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 4px;
-      margin-bottom: 10px;
-    }
+    .result-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.15rem; }
+    .result-card.full { grid-column: 1 / -1; }
+    .result-card.skip { opacity: 0.45; }
+    .result-source { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; color: var(--text3); margin-bottom: 8px; }
+    .result-status { display: inline-flex; align-items: center; gap: 5px; font-size: 0.75rem; font-weight: 600; padding: 3px 9px; border-radius: 4px; margin-bottom: 10px; }
     .status-ok   { background: var(--green-bg);  color: var(--green);  }
     .status-warn { background: var(--yellow-bg); color: var(--yellow); }
     .status-bad  { background: var(--red-bg);    color: var(--red);    }
     .status-skip { background: var(--bg4);        color: var(--text3);  }
-
-    .kv-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 5px 0;
-      border-top: 1px solid var(--border);
-      font-size: 0.78rem;
-    }
+    .kv-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 5px 0; border-top: 1px solid var(--border); font-size: 0.78rem; }
     .kv-key { color: var(--text2); flex-shrink: 0; }
     .kv-val { color: var(--text); font-family: var(--mono); text-align: right; word-break: break-all; max-width: 65%; }
     .kv-val.good { color: var(--green); }
     .kv-val.bad  { color: var(--red); }
     .kv-val.warn { color: var(--yellow); }
-
-    /* ─── MITRE section ───────────────────────────────── */
     .mitre-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .mitre-tag {
-      font-size: 0.7rem;
-      font-family: var(--mono);
-      padding: 3px 9px;
-      border-radius: 4px;
-      background: var(--purple-bg);
-      color: var(--purple);
-      border: 1px solid #2e2450;
-    }
-
-    /* ─── Export row ──────────────────────────────────── */
+    .mitre-tag { font-size: 0.7rem; font-family: var(--mono); padding: 3px 9px; border-radius: 4px; background: var(--purple-bg); color: var(--purple); border: 1px solid #2e2450; }
     .export-row { display: flex; gap: 8px; flex-wrap: wrap; }
-    .export-btn {
-      flex: 1;
-      min-width: 120px;
-      padding: 10px 16px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      font-family: var(--sans);
-      letter-spacing: 0.03em;
-      background: var(--bg3);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      text-align: center;
-    }
+    .export-btn { flex: 1; min-width: 120px; padding: 10px 16px; font-size: 0.78rem; font-weight: 600; font-family: var(--sans); letter-spacing: 0.03em; background: var(--bg3); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: background 0.15s, border-color 0.15s; text-align: center; }
     .export-btn:hover { background: var(--bg4); border-color: var(--border2); }
     .export-btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
     .export-btn.primary:hover { background: #3a8fd4; }
-
-    /* ─── Placeholder ─────────────────────────────────── */
-    .placeholder {
-      text-align: center;
-      padding: 3.5rem 1rem;
-      color: var(--text3);
-      font-size: 0.85rem;
-    }
-    .placeholder .icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
-      filter: grayscale(1);
-    }
+    .placeholder { text-align: center; padding: 3.5rem 1rem; color: var(--text3); font-size: 0.85rem; }
+    .placeholder .icon { font-size: 2.5rem; margin-bottom: 12px; filter: grayscale(1); }
     .placeholder p { line-height: 1.8; }
-
-    /* ─── Scrollbar ───────────────────────────────────── */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg); }
     ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-
-    /* ─── Footer ──────────────────────────────────────── */
-    .footer {
-      margin-top: 3rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.72rem;
-      color: var(--text3);
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+    .footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.72rem; color: var(--text3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
   </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- ─── Header ─────────────────────────────────────── -->
   <div class="header">
     <div class="header-left">
       <h1>Unified <span>IOC</span> Enrichment Tool</h1>
@@ -487,13 +148,12 @@
       <div class="header-badges">
         <span class="badge badge-green">Zero Install</span>
         <span class="badge badge-blue">Runs Anywhere</span>
-        <span class="badge badge-purple">5 APIs</span>
-        <span class="version">v1.0.0 · by Harudhan Kapoor</span>
+        <span class="badge badge-purple">6 APIs</span>
+        <span class="version">v1.2.0 · by Harudhan Kapoor</span>
       </div>
     </div>
   </div>
 
-  <!-- ─── API Keys ────────────────────────────────────── -->
   <div class="config-section">
     <div class="section-label">Step 1 — Configure API Keys</div>
     <div class="config-toggle" id="config-toggle" onclick="toggleConfig()">
@@ -511,24 +171,17 @@
     </div>
   </div>
 
-  <!-- ─── Input ──────────────────────────────────────── -->
   <div class="input-section">
     <div class="section-label">Step 2 — Enter IOC to Investigate</div>
     <div class="input-row">
-      <input
-        class="ioc-input"
-        id="ioc-input"
-        type="text"
+      <input class="ioc-input" id="ioc-input" type="text"
         placeholder="IP · Domain · MD5/SHA256 hash · URL"
-        autocomplete="off"
-        spellcheck="false"
-      />
+        autocomplete="off" spellcheck="false" />
       <button class="scan-btn" id="scan-btn" onclick="runScan()">Scan IOC →</button>
     </div>
     <div class="examples" id="examples-row"></div>
   </div>
 
-  <!-- ─── Results ────────────────────────────────────── -->
   <div id="results-area">
     <div class="placeholder">
       <div class="icon">🔍</div>
@@ -540,8 +193,8 @@
   </div>
 
   <div class="footer">
-    <span>Unified IOC Enrichment Tool · Open Source</span>
-    <span>AbuseIPDB · VirusTotal · IPInfo · Shodan · URLScan.io</span>
+    <span>Unified IOC Enrichment Tool · Open Source · v1.2.0</span>
+    <span>AbuseIPDB · VirusTotal · IPInfo · FreeIPAPI · Censys · URLScan.io</span>
   </div>
 
 </div>
@@ -576,14 +229,6 @@ const API_DEFS = [
     helpText:    'Free: 50k req/month'
   },
   {
-    id:          'shodan',
-    name:        'Shodan',
-    types:       ['ip'],
-    placeholder: 'Paste your API key',
-    helpUrl:     'https://account.shodan.io/',
-    helpText:    'Free tier available'
-  },
-  {
     id:          'urlscan',
     name:        'URLScan.io',
     types:       ['url','domain'],
@@ -591,13 +236,21 @@ const API_DEFS = [
     helpUrl:     'https://urlscan.io/user/profile/',
     helpText:    'Free tier available'
   },
+  {
+    id:          'censys',
+    name:        'Censys',
+    types:       ['ip'],
+    placeholder: 'censys_XXXX_...',
+    helpUrl:     'https://search.censys.io/account/api',
+    helpText:    'Free: 250 queries/month'
+  },
 ];
 
 const EXAMPLES = [
-  { label: '45.33.32.156',                   type: 'IP (Nmap host)' },
-  { label: 'malware-c2.xyz',                 type: 'Domain' },
+  { label: '45.33.32.156',                    type: 'IP (Nmap host)' },
+  { label: 'malware-c2.xyz',                  type: 'Domain' },
   { label: 'd41d8cd98f00b204e9800998ecf8427e', type: 'MD5 hash' },
-  { label: 'http://evil.ru/payload.exe',      type: 'URL' },
+  { label: 'http://evil.ru/payload.exe',       type: 'URL' },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -610,7 +263,6 @@ const store = {
 
 let keys = {};
 API_DEFS.forEach(a => { keys[a.id] = store.get(a.id); });
-
 let lastReport = null;
 
 /* ═══════════════════════════════════════════════════════
@@ -689,17 +341,17 @@ function toggleConfig() {
 ═══════════════════════════════════════════════════════ */
 function detectType(ioc) {
   ioc = ioc.trim();
-  if (/^https?:\/\//i.test(ioc))                                      return 'url';
-  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(ioc))                         return 'ip';
-  if (/^[a-f0-9]{32}$|^[a-f0-9]{40}$|^[a-f0-9]{64}$/i.test(ioc))    return 'hash';
-  if (/^[a-z0-9][a-z0-9\-\.]+\.[a-z]{2,}$/i.test(ioc))               return 'domain';
+  if (/^https?:\/\//i.test(ioc))                                   return 'url';
+  if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(ioc))                      return 'ip';
+  if (/^[a-f0-9]{32}$|^[a-f0-9]{40}$|^[a-f0-9]{64}$/i.test(ioc)) return 'hash';
+  if (/^[a-z0-9][a-z0-9\-\.]+\.[a-z]{2,}$/i.test(ioc))            return 'domain';
   return 'unknown';
 }
 
 function hashAlgo(hash) {
-  if (hash.length === 32)  return 'MD5';
-  if (hash.length === 40)  return 'SHA-1';
-  if (hash.length === 64)  return 'SHA-256';
+  if (hash.length === 32) return 'MD5';
+  if (hash.length === 40) return 'SHA-1';
+  if (hash.length === 64) return 'SHA-256';
   return 'hash';
 }
 
@@ -719,6 +371,7 @@ function addLog(el, msg, cls) {
    API QUERIES
 ═══════════════════════════════════════════════════════ */
 
+/* ── AbuseIPDB ───────────────────────────────────────── */
 async function queryAbuseIPDB(ip, logEl) {
   if (!keys.abuseipdb) { addLog(logEl, 'AbuseIPDB: skipped (no key)', ''); return null; }
   addLog(logEl, 'AbuseIPDB: querying...', 'info');
@@ -740,6 +393,7 @@ async function queryAbuseIPDB(ip, logEl) {
   }
 }
 
+/* ── VirusTotal ──────────────────────────────────────── */
 async function queryVirusTotal(ioc, type, logEl) {
   if (!keys.virustotal) { addLog(logEl, 'VirusTotal: skipped (no key)', ''); return null; }
   addLog(logEl, `VirusTotal: querying ${type}...`, 'info');
@@ -768,6 +422,7 @@ async function queryVirusTotal(ioc, type, logEl) {
   }
 }
 
+/* ── IPInfo ──────────────────────────────────────────── */
 async function queryIPInfo(ip, logEl) {
   if (!keys.ipinfo) { addLog(logEl, 'IPInfo: skipped (no key)', ''); return null; }
   addLog(logEl, 'IPInfo: querying geolocation...', 'info');
@@ -786,23 +441,53 @@ async function queryIPInfo(ip, logEl) {
   }
 }
 
-async function queryShodan(ip, logEl) {
-  addLog(logEl, 'ipwho.is: querying threat intel...', 'info');
+/* ── FreeIPAPI (no key needed, full CORS support) ────── */
+async function queryFreeIPAPI(ip, logEl) {
+  addLog(logEl, 'FreeIPAPI: querying network intel...', 'info');
   try {
-    const res = await fetch(`https://ipwho.is/${ip}`);
+    const res = await fetch(`https://freeipapi.com/api/json/${ip}`);
     const d = await res.json();
-    if (d.success) {
-      addLog(logEl, `ipwho.is: ${d.city}, ${d.country} — type=${d.type}`, 'ok');
+    if (d.ipAddress) {
+      addLog(logEl, `FreeIPAPI: ${d.cityName}, ${d.countryName} — proxy=${d.isProxy}`, 'ok');
       return d;
     }
-    addLog(logEl, `ipwho.is: ${d.message || 'no data'}`, 'err');
+    addLog(logEl, `FreeIPAPI: no data returned`, 'err');
     return null;
   } catch (e) {
-    addLog(logEl, `ipwho.is exception: ${e.message}`, 'err');
+    addLog(logEl, `FreeIPAPI exception: ${e.message}`, 'err');
     return null;
   }
 }
 
+/* ── Censys ──────────────────────────────────────────── */
+async function queryCensys(ip, logEl) {
+  if (!keys.censys) { addLog(logEl, 'Censys: skipped (no key)', ''); return null; }
+  addLog(logEl, 'Censys: querying host data...', 'info');
+  try {
+    const res = await fetch(
+      `https://corsproxy.io/?https://search.censys.io/api/v2/hosts/${encodeURIComponent(ip)}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${keys.censys}`,
+          'Accept': 'application/json'
+        }
+      }
+    );
+    const d = await res.json();
+    if (d.result) {
+      const ports = (d.result.services || []).map(s => s.port).join(', ');
+      addLog(logEl, `Censys: ${(d.result.services||[]).length} services found — ports: ${ports||'none'}`, 'ok');
+      return d.result;
+    }
+    addLog(logEl, `Censys error: ${d.message || JSON.stringify(d)}`, 'err');
+    return null;
+  } catch (e) {
+    addLog(logEl, `Censys exception: ${e.message}`, 'err');
+    return null;
+  }
+}
+
+/* ── URLScan.io ──────────────────────────────────────── */
 async function queryURLScan(ioc, logEl) {
   if (!keys.urlscan) { addLog(logEl, 'URLScan.io: skipped (no key)', ''); return null; }
   addLog(logEl, 'URLScan.io: submitting scan...', 'info');
@@ -846,6 +531,11 @@ function calcThreatScore(results) {
     factors.push(`VT:${stats.malicious||0}/${total}`);
   }
 
+  if (results.freeipapi && results.freeipapi.isProxy) {
+    if (score < 30) score = 30;
+    factors.push('Proxy:detected');
+  }
+
   return { score: Math.min(score, 100), factors };
 }
 
@@ -869,10 +559,10 @@ function getMitreTechniques(type, score) {
   if (score < 10) return [];
   const map = {
     ip: [
-      { id: 'T1071', name: 'Application Layer Protocol — C2 Communication' },
-      { id: 'T1090', name: 'Proxy / Connection Proxy' },
-      { id: 'T1046', name: 'Network Service Scanning' },
-      { id: 'T1571', name: 'Non-Standard Port Usage' },
+      { id: 'T1071',     name: 'Application Layer Protocol — C2 Communication' },
+      { id: 'T1090',     name: 'Proxy / Connection Proxy' },
+      { id: 'T1046',     name: 'Network Service Scanning' },
+      { id: 'T1571',     name: 'Non-Standard Port Usage' },
     ],
     domain: [
       { id: 'T1566.002', name: 'Phishing — Spear Phishing Link' },
@@ -881,10 +571,10 @@ function getMitreTechniques(type, score) {
       { id: 'T1583.001', name: 'Acquire Infrastructure — Domain' },
     ],
     hash: [
-      { id: 'T1204',    name: 'User Execution — Malicious File' },
-      { id: 'T1027',    name: 'Obfuscated Files or Information' },
-      { id: 'T1059',    name: 'Command and Scripting Interpreter' },
-      { id: 'T1036',    name: 'Masquerading' },
+      { id: 'T1204',     name: 'User Execution — Malicious File' },
+      { id: 'T1027',     name: 'Obfuscated Files or Information' },
+      { id: 'T1059',     name: 'Command and Scripting Interpreter' },
+      { id: 'T1036',     name: 'Masquerading' },
     ],
     url: [
       { id: 'T1566.002', name: 'Phishing — Malicious Link' },
@@ -901,7 +591,7 @@ function getMitreTechniques(type, score) {
 ═══════════════════════════════════════════════════════ */
 function kv(key, val, cls) {
   const valClass = cls ? ` class="kv-val ${cls}"` : ' class="kv-val"';
-  return `<div class="kv-row"><span class="kv-key">${key}</span><span${valClass}>${val || '—'}</span></div>`;
+  return `<div class="kv-row"><span class="kv-key">${key}</span><span${valClass}>${val !== undefined && val !== null && val !== '' ? val : '—'}</span></div>`;
 }
 
 function statusBadge(cls, text) {
@@ -920,14 +610,14 @@ function buildAbuseCard(data) {
     <div class="result-card">
       <div class="result-source">AbuseIPDB</div>
       ${statusBadge(cls, `${s}% Abuse Confidence Score`)}
-      ${kv('Total Reports', data.totalReports)}
+      ${kv('Total Reports',  data.totalReports)}
       ${kv('Distinct Users', data.numDistinctUsers)}
-      ${kv('Country', data.countryCode || '—')}
-      ${kv('ISP', data.isp || '—')}
-      ${kv('Domain', data.domain || '—')}
-      ${kv('Usage Type', data.usageType || '—')}
-      ${kv('Whitelisted', data.isWhitelisted ? 'Yes' : 'No', data.isWhitelisted ? 'good' : '')}
-      ${kv('Last Reported', data.lastReportedAt ? data.lastReportedAt.split('T')[0] : '—')}
+      ${kv('Country',        data.countryCode || '—')}
+      ${kv('ISP',            data.isp || '—')}
+      ${kv('Domain',         data.domain || '—')}
+      ${kv('Usage Type',     data.usageType || '—')}
+      ${kv('Whitelisted',    data.isWhitelisted ? 'Yes' : 'No', data.isWhitelisted ? 'good' : '')}
+      ${kv('Last Reported',  data.lastReportedAt ? data.lastReportedAt.split('T')[0] : '—')}
     </div>`;
 }
 
@@ -939,15 +629,15 @@ function buildVTCard(data) {
     </div>`;
   const stats = data.attributes?.last_analysis_stats || {};
   const total = Object.values(stats).reduce((a, b) => a + b, 0);
-  const mal = stats.malicious || 0;
-  const cls = mal >= 5 ? 'bad' : mal >= 1 ? 'warn' : 'ok';
-  const tags = (data.attributes?.tags || []).slice(0, 4).join(', ') || '—';
+  const mal   = stats.malicious || 0;
+  const cls   = mal >= 5 ? 'bad' : mal >= 1 ? 'warn' : 'ok';
+  const tags  = (data.attributes?.tags || []).slice(0, 4).join(', ') || '—';
   return `
     <div class="result-card">
       <div class="result-source">VirusTotal</div>
       ${statusBadge(cls, `${mal} / ${total} engines flagged`)}
-      ${kv('Malicious',  mal,                  mal > 0 ? 'bad' : 'good')}
-      ${kv('Suspicious', stats.suspicious || 0, (stats.suspicious||0) > 0 ? 'warn' : '')}
+      ${kv('Malicious',  mal,                   mal > 0 ? 'bad' : 'good')}
+      ${kv('Suspicious', stats.suspicious || 0,  (stats.suspicious||0) > 0 ? 'warn' : '')}
       ${kv('Harmless',   stats.harmless   || 0)}
       ${kv('Undetected', stats.undetected || 0)}
       ${kv('Reputation', data.attributes?.reputation)}
@@ -965,34 +655,66 @@ function buildIPInfoCard(data) {
     <div class="result-card">
       <div class="result-source">IPInfo — Geolocation</div>
       ${statusBadge('ok', 'Resolved')}
-      ${kv('City',     data.city)}
-      ${kv('Region',   data.region)}
-      ${kv('Country',  data.country)}
+      ${kv('City',      data.city)}
+      ${kv('Region',    data.region)}
+      ${kv('Country',   data.country)}
       ${kv('ASN / Org', data.org)}
-      ${kv('Hostname', data.hostname || '—')}
-      ${kv('Timezone', data.timezone)}
-      ${kv('Anycast',  data.anycast ? 'Yes' : 'No')}
+      ${kv('Hostname',  data.hostname || '—')}
+      ${kv('Timezone',  data.timezone)}
+      ${kv('Anycast',   data.anycast ? 'Yes' : 'No')}
     </div>`;
 }
 
-function buildShodanCard(data) {
+function buildFreeIPAPICard(data) {
   if (!data) return `
     <div class="result-card skip">
-     <div class="result-source">IPWho.is — Network Intel</div>
+      <div class="result-source">Network Intel — FreeIPAPI</div>
       ${statusBadge('skip', 'Query failed')}
     </div>`;
-  const isProxy = data.proxy || data.hosting;
+  const isProxy = data.isProxy;
   const cls = isProxy ? 'warn' : 'ok';
   return `
     <div class="result-card">
-      <div class="result-source">IPWho.is — Network Intel</div>
-      ${statusBadge(cls, isProxy ? 'Proxy / Hosting detected' : 'Clean IP')}
-      ${kv('Country',    data.country)}
-      ${kv('City',       data.city)}
-     ${kv('Type',       data.type || '—')}
-     ${kv('ASN',        data.connection?.asn || '—')}
-     ${kv('Org',        data.connection?.org || '—')}
-     ${kv('ISP',        data.connection?.isp || '—')}
+      <div class="result-source">Network Intel — FreeIPAPI</div>
+      ${statusBadge(cls, isProxy ? 'Proxy / VPN Detected' : 'Clean IP')}
+      ${kv('Country',   data.countryName)}
+      ${kv('City',      data.cityName)}
+      ${kv('Region',    data.regionName)}
+      ${kv('ISP',       data.ispName || '—')}
+      ${kv('Timezone',  data.timeZone || '—')}
+      ${kv('Latitude',  data.latitude)}
+      ${kv('Longitude', data.longitude)}
+      ${kv('Proxy/VPN', isProxy ? 'Yes' : 'No', isProxy ? 'bad' : 'good')}
+    </div>`;
+}
+
+function buildCensysCard(data) {
+  if (!data) return `
+    <div class="result-card skip">
+      <div class="result-source">Censys — Port Scanner</div>
+      ${statusBadge('skip', 'No key configured')}
+    </div>`;
+  const services = data.services || [];
+  const ports    = services.map(s => s.port).join(', ') || '—';
+  const names    = [...new Set(services.map(s => s.service_name).filter(Boolean))].slice(0,5).join(', ') || '—';
+  const hasVulns = services.some(s => s.truncated);
+  const cls      = services.length > 10 ? 'warn' : 'ok';
+  const lastSeen = data.last_updated_at ? data.last_updated_at.split('T')[0] : '—';
+  const os       = data.operating_system?.product || '—';
+  const country  = data.location?.country || '—';
+  const asn      = data.autonomous_system?.asn ? `AS${data.autonomous_system.asn}` : '—';
+  const org      = data.autonomous_system?.name || '—';
+  return `
+    <div class="result-card full">
+      <div class="result-source">Censys — Port Scanner</div>
+      ${statusBadge(cls, `${services.length} open services found`)}
+      ${kv('Open Ports',  ports)}
+      ${kv('Services',    names)}
+      ${kv('OS',          os)}
+      ${kv('Country',     country)}
+      ${kv('ASN',         asn)}
+      ${kv('Org',         org)}
+      ${kv('Last Scanned',lastSeen)}
     </div>`;
 }
 
@@ -1006,7 +728,7 @@ function buildURLScanCard(data) {
     <div class="result-card">
       <div class="result-source">URLScan.io</div>
       ${statusBadge('ok', 'Scan queued successfully')}
-      ${kv('Scan UUID',  data.uuid ? data.uuid : '—')}
+      ${kv('Scan UUID',  data.uuid || '—')}
       ${kv('Visibility', data.visibility || 'private')}
       ${kv('Report',     data.result ? `<a href="${data.result}" target="_blank" rel="noopener">View full report →</a>` : 'Pending')}
       <div class="kv-row" style="font-size:0.72rem;color:var(--text3);padding-top:8px;">
@@ -1019,7 +741,7 @@ function buildMitreCard(techniques) {
   if (!techniques.length) return '';
   return `
     <div class="result-card full">
-      <div class="result-source">MITRE ATT&CK — Likely Techniques</div>
+      <div class="result-source">MITRE ATT&amp;CK — Likely Techniques</div>
       <div style="font-size:0.75rem;color:var(--text2);margin-bottom:8px;">
         Based on IOC type and threat score — use as investigation starting point.
       </div>
@@ -1055,7 +777,8 @@ function renderReport(ioc, type, results) {
     cards = buildAbuseCard(results.abuseipdb) +
             buildVTCard(results.virustotal) +
             buildIPInfoCard(results.ipinfo) +
-            buildShodanCard(results.shodan);
+            buildFreeIPAPICard(results.freeipapi) +
+            buildCensysCard(results.censys);
   } else if (type === 'domain') {
     cards = buildVTCard(results.virustotal) +
             buildURLScanCard(results.urlscan);
@@ -1125,7 +848,7 @@ function renderReport(ioc, type, results) {
    MAIN SCAN RUNNER
 ═══════════════════════════════════════════════════════ */
 async function runScan() {
-  const raw  = document.getElementById('ioc-input').value.trim();
+  const raw = document.getElementById('ioc-input').value.trim();
   if (!raw) { alert('Please enter an IOC to scan.'); return; }
 
   const type = detectType(raw);
@@ -1143,7 +866,6 @@ async function runScan() {
   btn.disabled = true;
   btn.textContent = 'Scanning…';
 
-  // Setup log
   document.getElementById('results-area').innerHTML = `
     <div class="section-label">Live Enrichment Log</div>
     <div class="scan-log" id="scan-log"></div>
@@ -1153,23 +875,23 @@ async function runScan() {
   addLog(logEl, `Detected type: ${type.toUpperCase()}`, 'info');
   addLog(logEl, 'Starting parallel API queries...', 'info');
 
-  // Run queries in parallel
   const results = {};
   const promises = [];
 
   if (type === 'ip') {
-    promises.push(queryAbuseIPDB(raw, logEl).then(d => results.abuseipdb  = d));
+    promises.push(queryAbuseIPDB(raw, logEl).then(d  => results.abuseipdb  = d));
     promises.push(queryVirusTotal(raw, type, logEl).then(d => results.virustotal = d));
-    promises.push(queryIPInfo(raw, logEl).then(d => results.ipinfo      = d));
-    promises.push(queryShodan(raw, logEl).then(d => results.shodan      = d));
+    promises.push(queryIPInfo(raw, logEl).then(d     => results.ipinfo     = d));
+    promises.push(queryFreeIPAPI(raw, logEl).then(d  => results.freeipapi  = d));
+    promises.push(queryCensys(raw, logEl).then(d     => results.censys     = d));
   } else if (type === 'domain') {
     promises.push(queryVirusTotal(raw, type, logEl).then(d => results.virustotal = d));
-    promises.push(queryURLScan(raw, logEl).then(d => results.urlscan    = d));
+    promises.push(queryURLScan(raw, logEl).then(d    => results.urlscan    = d));
   } else if (type === 'hash') {
     promises.push(queryVirusTotal(raw, type, logEl).then(d => results.virustotal = d));
   } else if (type === 'url') {
     promises.push(queryVirusTotal(raw, type, logEl).then(d => results.virustotal = d));
-    promises.push(queryURLScan(raw, logEl).then(d => results.urlscan    = d));
+    promises.push(queryURLScan(raw, logEl).then(d    => results.urlscan    = d));
   }
 
   await Promise.all(promises);
@@ -1177,7 +899,7 @@ async function runScan() {
 
   setTimeout(() => {
     renderReport(raw, type, results);
-    btn.disabled  = false;
+    btn.disabled    = false;
     btn.textContent = 'Scan IOC →';
   }, 500);
 }
@@ -1214,7 +936,6 @@ function clearResults() {
     </div>`;
 }
 
-/* ─── Keyboard shortcut ────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   init();
   document.getElementById('ioc-input').addEventListener('keydown', e => {
