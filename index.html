@@ -789,7 +789,7 @@ async function queryIPInfo(ip, logEl) {
 async function queryShodan(ip, logEl) {
   addLog(logEl, 'ip-api.com: querying threat intel...', 'info');
   try {
-    const res = await fetch(`https://ip-api.com/json/${ip}?fields=66846719`);
+    const res = await fetch(`https://corsproxy.io/?https://ip-api.com/json/${ip}?fields=66846719`);
     const d = await res.json();
     if (d.status === 'success') {
      addLog(logEl, `ip-api: ${d.city}, ${d.country} — proxy=${d.proxy}, hosting=${d.hosting}`, 'ok');
