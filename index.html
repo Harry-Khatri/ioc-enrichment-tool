@@ -194,7 +194,7 @@
 
   <div class="footer">
     <span>Unified IOC Enrichment Tool · Open Source · v1.2.0</span>
-    <span>AbuseIPDB · VirusTotal · IPInfo · FreeIPAPI · Censys · URLScan.io</span>
+    <span>AbuseIPDB · VirusTotal · IPInfo · FreeIPAPI · HackerTarget · URLScan.io</span>
   </div>
 
 </div>
@@ -235,14 +235,6 @@ const API_DEFS = [
     placeholder: 'Paste your API key',
     helpUrl:     'https://urlscan.io/user/profile/',
     helpText:    'Free tier available'
-  },
-  {
-    id:          'censys',
-    name:        'Censys',
-    types:       ['ip'],
-    placeholder: 'censys_XXXX_...',
-    helpUrl:     'https://search.censys.io/account/api',
-    helpText:    'Free: 250 queries/month'
   },
 ];
 
@@ -445,7 +437,7 @@ async function queryIPInfo(ip, logEl) {
 async function queryFreeIPAPI(ip, logEl) {
   addLog(logEl, 'FreeIPAPI: querying network intel...', 'info');
   try {
-    const res = await fetch(`https://freeipapi.com/api/json/${ip}`);
+    const res = await fetch(`https://corsproxy.io/?https://freeipapi.com/api/json/${ip}`);
     const d = await res.json();
     if (d.ipAddress) {
       addLog(logEl, `FreeIPAPI: ${d.cityName}, ${d.countryName} — proxy=${d.isProxy}`, 'ok');
@@ -459,30 +451,21 @@ async function queryFreeIPAPI(ip, logEl) {
   }
 }
 
-/* ── Censys ──────────────────────────────────────────── */
+/* ── HackerTarget — Port Scanner (free, no key) ──────── */
 async function queryCensys(ip, logEl) {
-  if (!keys.censys) { addLog(logEl, 'Censys: skipped (no key)', ''); return null; }
-  addLog(logEl, 'Censys: querying host data...', 'info');
+  addLog(logEl, 'HackerTarget: scanning ports...', 'info');
   try {
-    const res = await fetch(
-      `https://corsproxy.io/?https://search.censys.io/api/v2/hosts/${encodeURIComponent(ip)}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${keys.censys}`,
-          'Accept': 'application/json'
-        }
-      }
-    );
-    const d = await res.json();
-    if (d.result) {
-      const ports = (d.result.services || []).map(s => s.port).join(', ');
-      addLog(logEl, `Censys: ${(d.result.services||[]).length} services found — ports: ${ports||'none'}`, 'ok');
-      return d.result;
+    const res = await fetch(`https://api.hackertarget.com/nmap/?q=${ip}`);
+    const text = await res.text();
+    if (text && !text.includes('error') && !text.includes('API count')) {
+      const lines = text.trim().split('\n').filter(l => l.includes('/tcp') || l.includes('/udp'));
+      addLog(logEl, `HackerTarget: ${lines.length} open ports found`, 'ok');
+      return { raw: text, ports: lines };
     }
-    addLog(logEl, `Censys error: ${d.message || JSON.stringify(d)}`, 'err');
+    addLog(logEl, `HackerTarget: ${text.slice(0,80)}`, 'err');
     return null;
   } catch (e) {
-    addLog(logEl, `Censys exception: ${e.message}`, 'err');
+    addLog(logEl, `HackerTarget exception: ${e.message}`, 'err');
     return null;
   }
 }
@@ -691,30 +674,23 @@ function buildFreeIPAPICard(data) {
 function buildCensysCard(data) {
   if (!data) return `
     <div class="result-card skip">
-      <div class="result-source">Censys — Port Scanner</div>
-      ${statusBadge('skip', 'No key configured')}
+      <div class="result-source">HackerTarget — Port Scanner</div>
+      ${statusBadge('skip', 'No data returned')}
     </div>`;
-  const services = data.services || [];
-  const ports    = services.map(s => s.port).join(', ') || '—';
-  const names    = [...new Set(services.map(s => s.service_name).filter(Boolean))].slice(0,5).join(', ') || '—';
-  const hasVulns = services.some(s => s.truncated);
-  const cls      = services.length > 10 ? 'warn' : 'ok';
-  const lastSeen = data.last_updated_at ? data.last_updated_at.split('T')[0] : '—';
-  const os       = data.operating_system?.product || '—';
-  const country  = data.location?.country || '—';
-  const asn      = data.autonomous_system?.asn ? `AS${data.autonomous_system.asn}` : '—';
-  const org      = data.autonomous_system?.name || '—';
+  const ports = data.ports || [];
+  const cls   = ports.length > 10 ? 'warn' : ports.length > 0 ? 'ok' : 'ok';
+  const portRows = ports.slice(0, 8).map(p => {
+    const parts = p.trim().split(/\s+/);
+    return `<div class="kv-row">
+      <span class="kv-key">${parts[0] || '—'}</span>
+      <span class="kv-val">${parts[2] || '—'} ${parts[3] || ''}</span>
+    </div>`;
+  }).join('');
   return `
     <div class="result-card full">
-      <div class="result-source">Censys — Port Scanner</div>
-      ${statusBadge(cls, `${services.length} open services found`)}
-      ${kv('Open Ports',  ports)}
-      ${kv('Services',    names)}
-      ${kv('OS',          os)}
-      ${kv('Country',     country)}
-      ${kv('ASN',         asn)}
-      ${kv('Org',         org)}
-      ${kv('Last Scanned',lastSeen)}
+      <div class="result-source">HackerTarget — Nmap Port Scan</div>
+      ${statusBadge(cls, `${ports.length} open port${ports.length !== 1 ? 's' : ''} detected`)}
+      ${ports.length ? portRows : '<div class="kv-row"><span class="kv-key">Result</span><span class="kv-val">No open ports found</span></div>'}
     </div>`;
 }
 
