@@ -787,19 +787,18 @@ async function queryIPInfo(ip, logEl) {
 }
 
 async function queryShodan(ip, logEl) {
-  if (!keys.shodan) { addLog(logEl, 'Shodan: skipped (no key)', ''); return null; }
-  addLog(logEl, 'Shodan: querying host info...', 'info');
+  addLog(logEl, 'ip-api.com: querying threat intel...', 'info');
   try {
-    const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://api.shodan.io/shodan/host/' + ip + '?key=' + keys.shodan)}`);
+    const res = await fetch(`https://ip-api.com/json/${ip}?fields=66846719`);
     const d = await res.json();
-    if (d.ip_str) {
-      addLog(logEl, `Shodan: ${(d.ports||[]).length} open ports, ${Object.keys(d.vulns||{}).length} CVEs`, 'ok');
+    if (d.status === 'success') {
+     addLog(logEl, `ip-api: ${d.city}, ${d.country} — proxy=${d.proxy}, hosting=${d.hosting}`, 'ok');
       return d;
     }
-    addLog(logEl, `Shodan: ${d.error || 'no data'}`, 'err');
+    addLog(logEl, `ip-api: ${d.message || 'no data'}`, 'err');
     return null;
   } catch (e) {
-    addLog(logEl, `Shodan exception: ${e.message}`, 'err');
+    addLog(logEl, `ip-api exception: ${e.message}`, 'err');
     return null;
   }
 }
@@ -979,24 +978,22 @@ function buildIPInfoCard(data) {
 function buildShodanCard(data) {
   if (!data) return `
     <div class="result-card skip">
-      <div class="result-source">Shodan</div>
-      ${statusBadge('skip', 'No key configured')}
+      <div class="result-source">IP-API — Threat Intel</div>
+      ${statusBadge('skip', 'Query failed')}
     </div>`;
-  const ports    = (data.ports || []).slice(0, 10).join(', ') || '—';
-  const hostnames= (data.hostnames || []).slice(0, 2).join(', ') || '—';
-  const vulnCount= Object.keys(data.vulns || {}).length;
-  const topVulns = Object.keys(data.vulns || {}).slice(0, 3).join(', ') || '—';
-  const cls = vulnCount > 3 ? 'bad' : vulnCount > 0 ? 'warn' : 'ok';
+  const isProxy = data.proxy || data.hosting;
+  const cls = isProxy ? 'warn' : 'ok';
   return `
     <div class="result-card">
-      <div class="result-source">Shodan</div>
-      ${statusBadge(cls, `${(data.ports||[]).length} open ports · ${vulnCount} CVEs`)}
-      ${kv('OS',         data.os || '—')}
-      ${kv('Hostnames',  hostnames)}
-      ${kv('Open Ports', ports)}
-      ${kv('Known CVEs', vulnCount, vulnCount > 0 ? (vulnCount > 3 ? 'bad' : 'warn') : 'good')}
-      ${kv('Top CVEs',   topVulns, vulnCount > 0 ? 'bad' : '')}
-      ${kv('Last Seen',  data.last_update ? data.last_update.split('T')[0] : '—')}
+      <div class="result-source">IP-API — Threat Intel</div>
+      ${statusBadge(cls, isProxy ? 'Proxy / Hosting detected' : 'Clean IP')}
+      ${kv('Country',    data.country)}
+      ${kv('City',       data.city)}
+      ${kv('ISP',        data.isp)}
+      ${kv('ASN',        data.as)}
+      ${kv('Proxy/VPN',  data.proxy  ? 'Yes' : 'No', data.proxy  ? 'bad'  : 'good')}
+      ${kv('Hosting/DC', data.hosting ? 'Yes' : 'No', data.hosting ? 'warn' : 'good')}
+      ${kv('Mobile',     data.mobile  ? 'Yes' : 'No')}
     </div>`;
 }
 
