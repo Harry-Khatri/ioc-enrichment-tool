@@ -787,18 +787,18 @@ async function queryIPInfo(ip, logEl) {
 }
 
 async function queryShodan(ip, logEl) {
-  addLog(logEl, 'ip-api.com: querying threat intel...', 'info');
+  addLog(logEl, 'ipwho.is: querying threat intel...', 'info');
   try {
-    const res = await fetch(`https://corsproxy.io/?https://ip-api.com/json/${ip}?fields=66846719`);
+    const res = await fetch(`https://ipwho.is/${ip}`);
     const d = await res.json();
-    if (d.status === 'success') {
-     addLog(logEl, `ip-api: ${d.city}, ${d.country} — proxy=${d.proxy}, hosting=${d.hosting}`, 'ok');
+    if (d.success) {
+      addLog(logEl, `ipwho.is: ${d.city}, ${d.country} — type=${d.type}`, 'ok');
       return d;
     }
-    addLog(logEl, `ip-api: ${d.message || 'no data'}`, 'err');
+    addLog(logEl, `ipwho.is: ${d.message || 'no data'}`, 'err');
     return null;
   } catch (e) {
-    addLog(logEl, `ip-api exception: ${e.message}`, 'err');
+    addLog(logEl, `ipwho.is exception: ${e.message}`, 'err');
     return null;
   }
 }
@@ -978,22 +978,21 @@ function buildIPInfoCard(data) {
 function buildShodanCard(data) {
   if (!data) return `
     <div class="result-card skip">
-      <div class="result-source">IP-API — Threat Intel</div>
+     <div class="result-source">IPWho.is — Network Intel</div>
       ${statusBadge('skip', 'Query failed')}
     </div>`;
   const isProxy = data.proxy || data.hosting;
   const cls = isProxy ? 'warn' : 'ok';
   return `
     <div class="result-card">
-      <div class="result-source">IP-API — Threat Intel</div>
+      <div class="result-source">IPWho.is — Network Intel</div>
       ${statusBadge(cls, isProxy ? 'Proxy / Hosting detected' : 'Clean IP')}
       ${kv('Country',    data.country)}
       ${kv('City',       data.city)}
-      ${kv('ISP',        data.isp)}
-      ${kv('ASN',        data.as)}
-      ${kv('Proxy/VPN',  data.proxy  ? 'Yes' : 'No', data.proxy  ? 'bad'  : 'good')}
-      ${kv('Hosting/DC', data.hosting ? 'Yes' : 'No', data.hosting ? 'warn' : 'good')}
-      ${kv('Mobile',     data.mobile  ? 'Yes' : 'No')}
+     ${kv('Type',       data.type || '—')}
+     ${kv('ASN',        data.connection?.asn || '—')}
+     ${kv('Org',        data.connection?.org || '—')}
+     ${kv('ISP',        data.connection?.isp || '—')}
     </div>`;
 }
 
