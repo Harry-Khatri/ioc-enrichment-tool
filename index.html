@@ -194,7 +194,7 @@
 
   <div class="footer">
     <span>Unified IOC Enrichment Tool · Open Source · v1.3.0</span>
-    <span>AbuseIPDB · VirusTotal · IPInfo · HackerTarget · URLScan.io</span>
+    <span>AbuseIPDB · VirusTotal · IPInfo · Shodan InternetDB · URLScan.io</span>
   </div>
 
 </div>
@@ -437,21 +437,20 @@ async function queryIPInfo(ip, logEl) {
 
 
 
-/* ── HackerTarget — Nmap Port Scan (free, no key) ───── */
+/* ── Shodan InternetDB (free, no key needed) ─────────── */
 async function queryHackerTarget(ip, logEl) {
-  addLog(logEl, 'HackerTarget: running Nmap scan...', 'info');
+  addLog(logEl, 'Shodan InternetDB: querying ports & CVEs...', 'info');
   try {
-    const res = await fetch(`https://corsproxy.io/?https://api.hackertarget.com/nmap/?q=${ip}`);
-    const text = await res.text();
-    if (text && !text.includes('error') && !text.includes('API count') && !text.includes('limit')) {
-      const lines = text.trim().split('\n').filter(l => l.includes('/tcp') || l.includes('/udp'));
-      addLog(logEl, `HackerTarget: ${lines.length} open port(s) found`, 'ok');
-      return { raw: text, ports: lines };
+    const res = await fetch(`https://corsproxy.io/?https://internetdb.shodan.io/${ip}`);
+    const d = await res.json();
+    if (d.ip) {
+      addLog(logEl, `Shodan InternetDB: ${(d.ports||[]).length} ports, ${(d.vulns||[]).length} CVEs`, 'ok');
+      return d;
     }
-    addLog(logEl, `HackerTarget: ${text.slice(0, 80)}`, 'err');
+    addLog(logEl, `Shodan InternetDB: ${d.detail || 'no data'}`, 'err');
     return null;
   } catch (e) {
-    addLog(logEl, `HackerTarget exception: ${e.message}`, 'err');
+    addLog(logEl, `Shodan InternetDB exception: ${e.message}`, 'err');
     return null;
   }
 }
@@ -636,23 +635,23 @@ function buildIPInfoCard(data) {
 function buildHackerTargetCard(data) {
   if (!data) return `
     <div class="result-card skip">
-      <div class="result-source">HackerTarget — Nmap Port Scan</div>
+      <div class="result-source">Shodan InternetDB</div>
       ${statusBadge('skip', 'No data returned')}
     </div>`;
-  const ports = data.ports || [];
-  const cls   = ports.length > 10 ? 'warn' : 'ok';
-  const portRows = ports.slice(0, 10).map(p => {
-    const parts = p.trim().split(/\s+/);
-    return `<div class="kv-row">
-      <span class="kv-key" style="font-family:var(--mono)">${parts[0] || '—'}</span>
-      <span class="kv-val">${parts[2] || '—'} ${parts[3] || ''}</span>
-    </div>`;
-  }).join('');
+  const ports    = (data.ports  || []).join(', ') || '—';
+  const vulns    = (data.vulns  || []).slice(0, 5).join(', ') || '—';
+  const tags     = (data.tags   || []).join(', ') || '—';
+  const hostnames= (data.hostnames || []).slice(0, 2).join(', ') || '—';
+  const vulnCount= (data.vulns  || []).length;
+  const cls      = vulnCount > 3 ? 'bad' : vulnCount > 0 ? 'warn' : 'ok';
   return `
     <div class="result-card full">
-      <div class="result-source">HackerTarget — Nmap Port Scan</div>
-      ${statusBadge(cls, `${ports.length} open port${ports.length !== 1 ? 's' : ''} detected`)}
-      ${ports.length ? portRows : kv('Result', 'No open ports found')}
+      <div class="result-source">Shodan InternetDB — Ports &amp; Vulnerabilities</div>
+      ${statusBadge(cls, `${(data.ports||[]).length} open ports · ${vulnCount} CVEs`)}
+      ${kv('Open Ports', ports)}
+      ${kv('Hostnames',  hostnames)}
+      ${kv('Tags',       tags)}
+      ${kv('CVEs',       vulns, vulnCount > 0 ? 'bad' : 'good')}
     </div>`;
 }
 
