@@ -32,10 +32,19 @@
       --radius-lg: 12px;
     }
     html { font-size: 15px; }
-    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+    body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; position: relative; overflow-x: hidden; }
+
     a { color: var(--blue); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    .app { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    /* ─── Cyber Background ────────────────────────────── */
+    #cyber-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .app { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
     .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2.5rem; gap: 1rem; flex-wrap: wrap; }
     .header-left h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
     .header-left h1 span { color: var(--blue); }
@@ -139,6 +148,7 @@
   </style>
 </head>
 <body>
+<canvas id="cyber-bg"></canvas>
 <div class="app">
 
   <div class="header">
@@ -877,6 +887,201 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') runScan();
   });
 });
+/* ═══════════════════════════════════════════════════════
+   CYBER BACKGROUND ANIMATION
+═══════════════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('cyber-bg');
+  const ctx    = canvas.getContext('2d');
+
+  let W, H, nodes, lines, particles;
+
+  const COLORS = {
+    grid:     'rgba(77,157,224,0.06)',
+    node:     'rgba(77,157,224,0.5)',
+    line:     'rgba(77,157,224,0.12)',
+    particle: 'rgba(29,184,122,0.7)',
+    pulse:    'rgba(77,157,224,0.15)',
+    scan:     'rgba(29,184,122,0.04)',
+  };
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    init();
+  }
+
+  function rand(min, max) { return Math.random() * (max - min) + min; }
+
+  function init() {
+    // Nodes — connection points on grid
+    nodes = [];
+    const cols = Math.floor(W / 120);
+    const rows = Math.floor(H / 120);
+    for (let c = 0; c <= cols; c++) {
+      for (let r = 0; r <= rows; r++) {
+        nodes.push({
+          x:       c * 120 + rand(-30, 30),
+          y:       r * 120 + rand(-30, 30),
+          vx:      rand(-0.12, 0.12),
+          vy:      rand(-0.12, 0.12),
+          radius:  rand(1, 2.5),
+          pulse:   rand(0, Math.PI * 2),
+          pulseSpeed: rand(0.01, 0.03),
+          active:  Math.random() > 0.7,
+        });
+      }
+    }
+
+    // Floating particles
+    particles = Array.from({ length: 35 }, () => ({
+      x:     rand(0, W),
+      y:     rand(0, H),
+      vx:    rand(-0.3, 0.3),
+      vy:    rand(-0.6, -0.1),
+      size:  rand(1, 2),
+      alpha: rand(0.2, 0.8),
+      life:  rand(0, 1),
+    }));
+
+    // Horizontal scan line
+    lines = { y: 0, speed: 0.4 };
+  }
+
+  function drawGrid() {
+    const size = 40;
+    ctx.strokeStyle = COLORS.grid;
+    ctx.lineWidth   = 0.5;
+    for (let x = 0; x < W; x += size) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, H);
+      ctx.stroke();
+    }
+    for (let y = 0; y < H; y += size) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(W, y);
+      ctx.stroke();
+    }
+  }
+
+  function drawConnections() {
+    const maxDist = 180;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx   = nodes[i].x - nodes[j].x;
+        const dy   = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < maxDist) {
+          const alpha = (1 - dist / maxDist) * 0.2;
+          ctx.strokeStyle = `rgba(77,157,224,${alpha})`;
+          ctx.lineWidth   = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function drawNodes() {
+    nodes.forEach(n => {
+      n.pulse += n.pulseSpeed;
+      const glow = (Math.sin(n.pulse) + 1) / 2;
+
+      if (n.active) {
+        // Outer pulse ring
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius * 3 + glow * 4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(77,157,224,${0.04 + glow * 0.06})`;
+        ctx.fill();
+      }
+
+      // Core dot
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+      ctx.fillStyle = n.active
+        ? `rgba(77,157,224,${0.4 + glow * 0.6})`
+        : `rgba(77,157,224,0.2)`;
+      ctx.fill();
+
+      // Move nodes slowly
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < -50 || n.x > W + 50) n.vx *= -1;
+      if (n.y < -50 || n.y > H + 50) n.vy *= -1;
+    });
+  }
+
+  function drawParticles() {
+    particles.forEach(p => {
+      p.life += 0.004;
+      if (p.life > 1) {
+        p.x    = rand(0, W);
+        p.y    = H + 10;
+        p.life = 0;
+        p.alpha= rand(0.2, 0.8);
+      }
+      p.x += p.vx;
+      p.y += p.vy;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(29,184,122,${p.alpha * (1 - p.life)})`;
+      ctx.fill();
+    });
+  }
+
+  function drawScanLine() {
+    lines.y += lines.speed;
+    if (lines.y > H) lines.y = 0;
+
+    const grad = ctx.createLinearGradient(0, lines.y - 60, 0, lines.y + 10);
+    grad.addColorStop(0,   'rgba(29,184,122,0)');
+    grad.addColorStop(0.8, 'rgba(29,184,122,0.04)');
+    grad.addColorStop(1,   'rgba(29,184,122,0.08)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, lines.y - 60, W, 70);
+
+    ctx.strokeStyle = 'rgba(29,184,122,0.15)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, lines.y);
+    ctx.lineTo(W, lines.y);
+    ctx.stroke();
+  }
+
+  function drawCornerDecorations() {
+    const size = 30;
+    ctx.strokeStyle = 'rgba(77,157,224,0.25)';
+    ctx.lineWidth   = 1.5;
+
+    // Top-left
+    ctx.beginPath(); ctx.moveTo(20, 20 + size); ctx.lineTo(20, 20); ctx.lineTo(20 + size, 20); ctx.stroke();
+    // Top-right
+    ctx.beginPath(); ctx.moveTo(W - 20 - size, 20); ctx.lineTo(W - 20, 20); ctx.lineTo(W - 20, 20 + size); ctx.stroke();
+    // Bottom-left
+    ctx.beginPath(); ctx.moveTo(20, H - 20 - size); ctx.lineTo(20, H - 20); ctx.lineTo(20 + size, H - 20); ctx.stroke();
+    // Bottom-right
+    ctx.beginPath(); ctx.moveTo(W - 20 - size, H - 20); ctx.lineTo(W - 20, H - 20); ctx.lineTo(W - 20, H - 20 - size); ctx.stroke();
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, W, H);
+    drawGrid();
+    drawConnections();
+    drawScanLine();
+    drawNodes();
+    drawParticles();
+    drawCornerDecorations();
+    requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  animate();
+})();
 </script>
 </body>
 </html>
