@@ -29,7 +29,7 @@ Paste IOC → auto-detects type → queries all APIs in parallel → unified thr
 | Feature | Details |
 |---|---|
 | **Auto-detection** | Automatically identifies IP, domain, MD5/SHA1/SHA256 hash, or URL |
-| **5 API integrations** | AbuseIPDB · VirusTotal · IPInfo · Shodan · URLScan.io |
+| **4 API integrations** | AbuseIPDB · VirusTotal · IPInfo · URLScan.io |
 | **Parallel queries** | All APIs queried simultaneously — no waiting |
 | **Threat Score** | 0–100 composite score with animated display |
 | **MITRE ATT&CK mapping** | Suggests relevant techniques based on IOC type and score |
@@ -44,7 +44,7 @@ Paste IOC → auto-detects type → queries all APIs in parallel → unified thr
 
 | Type | Example | APIs Used |
 |---|---|---|
-| **IPv4 Address** | `45.33.32.156` | AbuseIPDB, VirusTotal, IPInfo, Shodan |
+| **IPv4 Address** | `45.33.32.156` | AbuseIPDB, VirusTotal, IPInfo |
 | **Domain** | `malware-c2.xyz` | VirusTotal, URLScan.io |
 | **File Hash** (MD5/SHA1/SHA256) | `d41d8cd98f00b204e9800998ecf8427e` | VirusTotal |
 | **URL** | `http://evil.ru/payload.exe` | VirusTotal, URLScan.io |
@@ -84,7 +84,6 @@ The tool works with any combination of keys — more keys = richer reports. All 
 | **AbuseIPDB** | 1,000 checks/day | [abuseipdb.com/account/api](https://www.abuseipdb.com/account/api) |
 | **VirusTotal** | 4 lookups/min, 500/day | [virustotal.com/gui/user/apikey](https://www.virustotal.com/gui/user/apikey) |
 | **IPInfo** | 50,000 req/month | [ipinfo.io/account/token](https://ipinfo.io/account/token) |
-| **Shodan** | Limited free tier | [account.shodan.io](https://account.shodan.io/) |
 | **URLScan.io** | Free tier available | [urlscan.io/user/profile](https://urlscan.io/user/profile/) |
 
 **Security note:** Keys are stored in your browser's `localStorage` only. They are sent directly to each API endpoint and nowhere else. The tool has no backend.
@@ -93,7 +92,7 @@ The tool works with any combination of keys — more keys = richer reports. All 
 
 ## 📸 Screenshot
 
-> _Tool running in browser showing IP enrichment report with threat score, AbuseIPDB data, VirusTotal detections, geolocation, Shodan port scan, and MITRE ATT&CK techniques._
+> _Tool running in browser showing IP enrichment report with threat score, AbuseIPDB data, VirusTotal detections, geolocation, and MITRE ATT&CK techniques._
 
 ---
 
@@ -141,8 +140,8 @@ The entire tool is **one self-contained HTML file** — no dependencies, no pack
          │     Parallel API Calls     │
          │                            │
          │  AbuseIPDB   VirusTotal    │
-         │  IPInfo      Shodan        │
-         │  URLScan.io                │
+         │  IPInfo      URLScan.io    │
+         │                            │
          └─────────────┬──────────────┘
                        │
          ┌─────────────▼──────────────┐
