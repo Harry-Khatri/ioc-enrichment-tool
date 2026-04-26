@@ -148,8 +148,8 @@
       <div class="header-badges">
         <span class="badge badge-green">Zero Install</span>
         <span class="badge badge-blue">Runs Anywhere</span>
-        <span class="badge badge-purple">6 APIs</span>
-        <span class="version">v1.2.0 · by Harudhan Kapoor</span>
+        <span class="badge badge-purple">5 APIs</span>
+        <span class="version">v1.3.0 · by Harudhan Kapoor</span>
       </div>
     </div>
   </div>
@@ -193,8 +193,8 @@
   </div>
 
   <div class="footer">
-    <span>Unified IOC Enrichment Tool · Open Source · v1.2.0</span>
-    <span>AbuseIPDB · VirusTotal · IPInfo · FreeIPAPI · HackerTarget · URLScan.io</span>
+    <span>Unified IOC Enrichment Tool · Open Source · v1.3.0</span>
+    <span>AbuseIPDB · VirusTotal · IPInfo · HackerTarget · URLScan.io</span>
   </div>
 
 </div>
@@ -433,36 +433,22 @@ async function queryIPInfo(ip, logEl) {
   }
 }
 
-/* ── FreeIPAPI (no key needed, full CORS support) ────── */
-async function queryFreeIPAPI(ip, logEl) {
-  addLog(logEl, 'FreeIPAPI: querying network intel...', 'info');
-  try {
-    const res = await fetch(`https://corsproxy.io/?https://freeipapi.com/api/json/${ip}`);
-    const d = await res.json();
-    if (d.ipAddress) {
-      addLog(logEl, `FreeIPAPI: ${d.cityName}, ${d.countryName} — proxy=${d.isProxy}`, 'ok');
-      return d;
-    }
-    addLog(logEl, `FreeIPAPI: no data returned`, 'err');
-    return null;
-  } catch (e) {
-    addLog(logEl, `FreeIPAPI exception: ${e.message}`, 'err');
-    return null;
-  }
-}
 
-/* ── HackerTarget — Port Scanner (free, no key) ──────── */
-async function queryCensys(ip, logEl) {
-  addLog(logEl, 'HackerTarget: scanning ports...', 'info');
+
+
+
+/* ── HackerTarget — Nmap Port Scan (free, no key) ───── */
+async function queryHackerTarget(ip, logEl) {
+  addLog(logEl, 'HackerTarget: running Nmap scan...', 'info');
   try {
-    const res = await fetch(`https://api.hackertarget.com/nmap/?q=${ip}`);
+    const res = await fetch(`https://corsproxy.io/?https://api.hackertarget.com/nmap/?q=${ip}`);
     const text = await res.text();
-    if (text && !text.includes('error') && !text.includes('API count')) {
+    if (text && !text.includes('error') && !text.includes('API count') && !text.includes('limit')) {
       const lines = text.trim().split('\n').filter(l => l.includes('/tcp') || l.includes('/udp'));
-      addLog(logEl, `HackerTarget: ${lines.length} open ports found`, 'ok');
+      addLog(logEl, `HackerTarget: ${lines.length} open port(s) found`, 'ok');
       return { raw: text, ports: lines };
     }
-    addLog(logEl, `HackerTarget: ${text.slice(0,80)}`, 'err');
+    addLog(logEl, `HackerTarget: ${text.slice(0, 80)}`, 'err');
     return null;
   } catch (e) {
     addLog(logEl, `HackerTarget exception: ${e.message}`, 'err');
@@ -512,11 +498,6 @@ function calcThreatScore(results) {
     const vtScore = Math.round(((stats.malicious || 0) / total) * 100);
     if (vtScore > score) score = vtScore;
     factors.push(`VT:${stats.malicious||0}/${total}`);
-  }
-
-  if (results.freeipapi && results.freeipapi.isProxy) {
-    if (score < 30) score = 30;
-    factors.push('Proxy:detected');
   }
 
   return { score: Math.min(score, 100), factors };
@@ -648,41 +629,22 @@ function buildIPInfoCard(data) {
     </div>`;
 }
 
-function buildFreeIPAPICard(data) {
-  if (!data) return `
-    <div class="result-card skip">
-      <div class="result-source">Network Intel — FreeIPAPI</div>
-      ${statusBadge('skip', 'Query failed')}
-    </div>`;
-  const isProxy = data.isProxy;
-  const cls = isProxy ? 'warn' : 'ok';
-  return `
-    <div class="result-card">
-      <div class="result-source">Network Intel — FreeIPAPI</div>
-      ${statusBadge(cls, isProxy ? 'Proxy / VPN Detected' : 'Clean IP')}
-      ${kv('Country',   data.countryName)}
-      ${kv('City',      data.cityName)}
-      ${kv('Region',    data.regionName)}
-      ${kv('ISP',       data.ispName || '—')}
-      ${kv('Timezone',  data.timeZone || '—')}
-      ${kv('Latitude',  data.latitude)}
-      ${kv('Longitude', data.longitude)}
-      ${kv('Proxy/VPN', isProxy ? 'Yes' : 'No', isProxy ? 'bad' : 'good')}
-    </div>`;
-}
 
-function buildCensysCard(data) {
+
+
+
+function buildHackerTargetCard(data) {
   if (!data) return `
     <div class="result-card skip">
-      <div class="result-source">HackerTarget — Port Scanner</div>
+      <div class="result-source">HackerTarget — Nmap Port Scan</div>
       ${statusBadge('skip', 'No data returned')}
     </div>`;
   const ports = data.ports || [];
-  const cls   = ports.length > 10 ? 'warn' : ports.length > 0 ? 'ok' : 'ok';
-  const portRows = ports.slice(0, 8).map(p => {
+  const cls   = ports.length > 10 ? 'warn' : 'ok';
+  const portRows = ports.slice(0, 10).map(p => {
     const parts = p.trim().split(/\s+/);
     return `<div class="kv-row">
-      <span class="kv-key">${parts[0] || '—'}</span>
+      <span class="kv-key" style="font-family:var(--mono)">${parts[0] || '—'}</span>
       <span class="kv-val">${parts[2] || '—'} ${parts[3] || ''}</span>
     </div>`;
   }).join('');
@@ -690,7 +652,7 @@ function buildCensysCard(data) {
     <div class="result-card full">
       <div class="result-source">HackerTarget — Nmap Port Scan</div>
       ${statusBadge(cls, `${ports.length} open port${ports.length !== 1 ? 's' : ''} detected`)}
-      ${ports.length ? portRows : '<div class="kv-row"><span class="kv-key">Result</span><span class="kv-val">No open ports found</span></div>'}
+      ${ports.length ? portRows : kv('Result', 'No open ports found')}
     </div>`;
 }
 
@@ -753,8 +715,7 @@ function renderReport(ioc, type, results) {
     cards = buildAbuseCard(results.abuseipdb) +
             buildVTCard(results.virustotal) +
             buildIPInfoCard(results.ipinfo) +
-            buildFreeIPAPICard(results.freeipapi) +
-            buildCensysCard(results.censys);
+            buildHackerTargetCard(results.hackertarget);
   } else if (type === 'domain') {
     cards = buildVTCard(results.virustotal) +
             buildURLScanCard(results.urlscan);
@@ -855,11 +816,10 @@ async function runScan() {
   const promises = [];
 
   if (type === 'ip') {
-    promises.push(queryAbuseIPDB(raw, logEl).then(d  => results.abuseipdb  = d));
+    promises.push(queryAbuseIPDB(raw, logEl).then(d      => results.abuseipdb    = d));
     promises.push(queryVirusTotal(raw, type, logEl).then(d => results.virustotal = d));
-    promises.push(queryIPInfo(raw, logEl).then(d     => results.ipinfo     = d));
-    promises.push(queryFreeIPAPI(raw, logEl).then(d  => results.freeipapi  = d));
-    promises.push(queryCensys(raw, logEl).then(d     => results.censys     = d));
+    promises.push(queryIPInfo(raw, logEl).then(d          => results.ipinfo      = d));
+    promises.push(queryHackerTarget(raw, logEl).then(d    => results.hackertarget = d));
   } else if (type === 'domain') {
     promises.push(queryVirusTotal(raw, type, logEl).then(d => results.virustotal = d));
     promises.push(queryURLScan(raw, logEl).then(d    => results.urlscan    = d));
