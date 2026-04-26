@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [1.0.0] — 2025
+## [1.3.0] — 2025
 
 ### Added
 - Initial release
@@ -12,7 +12,6 @@ All notable changes to this project will be documented in this file.
 - AbuseIPDB integration — abuse confidence score, total reports, ISP, country
 - VirusTotal integration — engine detections for all IOC types
 - IPInfo integration — geolocation, ASN, org for IPs
-- Shodan integration — open ports, CVEs, OS fingerprinting for IPs
 - URLScan.io integration — scan submission for URLs and domains
 - Composite 0–100 threat score engine
 - MITRE ATT&CK technique mapping by IOC type and score
